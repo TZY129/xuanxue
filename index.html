@@ -68,12 +68,12 @@ h2::before { content: "🔮"; }
 <body>
 
 <div class="nav">
-  <button class="nav-btn active" onclick="showPanel('bazi', event)">四柱八字</button>
-  <button class="nav-btn" onclick="showPanel('astro', event)">星盘解析</button>
-  <button class="nav-btn" onclick="showPanel('ziwei', event)">紫微斗数</button>
-  <button class="nav-btn" onclick="showPanel('tarot', event)">塔罗牌</button>
-  <button class="nav-btn" onclick="showPanel('qimen', event)">奇门遁甲</button>
-  <button class="nav-btn" onclick="showPanel('yijing', event)">易经占卜</button>
+  <button class="nav-btn active" onclick="showPanel('bazi')">四柱八字</button>
+  <button class="nav-btn" onclick="showPanel('astro')">星盘解析</button>
+  <button class="nav-btn" onclick="showPanel('ziwei')">紫微斗数</button>
+  <button class="nav-btn" onclick="showPanel('tarot')">塔罗牌</button>
+  <button class="nav-btn" onclick="showPanel('qimen')">奇门遁甲</button>
+  <button class="nav-btn" onclick="showPanel('yijing')">易经占卜</button>
 </div>
 
 <div class="container">
@@ -365,20 +365,18 @@ const DIZHI_CANG = {
 };
 
 // ==================== 工具函数 ====================
-function showPanel(name, evt) {
+function showPanel(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('panel-' + name).classList.add('active');
-  if (evt && evt.currentTarget) {
-    evt.currentTarget.classList.add('active');
-  } else {
-    // 兼容：通过 name 找到对应按钮
-    document.querySelectorAll('.nav-btn').forEach(b => {
-      if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + name + "'")) {
+  // 找到对应按钮并高亮
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    try {
+      if (b.onclick && b.onclick.toString().includes("'" + name + "'")) {
         b.classList.add('active');
       }
-    });
-  }
+    } catch(e) {}
+  });
 }
 
 function getWuxingScore(bazi) {
@@ -732,8 +730,6 @@ function calcAstro() {
   const month = parseInt(parts[1], 10); // 1~12
   const day   = parseInt(parts[2], 10);
   const hour = timeStr ? parseInt(timeStr.split(':')[0], 10) : 12;
-  // 用解析出的年月日构造 Date，避免时区偏移
-  const d = new Date(y, month - 1, day, hour || 12, 0, 0);
   
   // 太阳星座
   const sunSign = getSunSign(month, day);
