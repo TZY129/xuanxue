@@ -688,8 +688,22 @@ function calcBazi() {
 const SUNSIGN_DATES = [20,19,21,20,21,22,23,23,23,24,22,22];
 const SUNSIGN_LIST  = ['摩羯座','水瓶座','双鱼座','白羊座','金牛座','双子座','巨蟹座','狮子座','处女座','天秤座','天蝎座','射手座'];
 
+// 儒略日计算
+function dateToJulian(y, m, d, h, mi, s) {
+  if (m <= 2) { y -= 1; m += 12; }
+  const A = Math.floor(y / 100);
+  const B = 2 - A + Math.floor(A / 4);
+  return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + B - 1524.5 + (h + mi/60 + s/3600) / 24;
+}
+
+// 简化上升星座计算（仅供参考，精确计算需出生地经纬度）
+function simplifiedAscendant(hour, month, day) {
+  // 以北京时间12:00为基准，结合月日微调
+  const base = ((hour || 12) + 8) % 24; // 北京时区修正
+  return Math.floor((base / 2 + month + day) % 12);
+}
+
 function getSunSign(month, day) {
-  // 12月特殊处理：>=22 为摩羯座（下标0）
   if (month === 12) {
     return day < SUNSIGN_DATES[11] ? SUNSIGN_LIST[11] : SUNSIGN_LIST[0];
   }
@@ -711,17 +725,16 @@ function calcAstro() {
   // 太阳星座
   const sunSign = getSunSign(month, day);
   
-  // 月亮星座（按月亮周期估算，约2.5天换一星座）
-  const baseDate = new Date(2000, 0, 6, 8, 0, 0);
-  const targetDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hour || 12, 0, 0);
-  const diffDays = (targetDate - baseDate) / 86400000;
-  // 月亮每天移动约13.2°，约2.5天换一星座
-  const moonSignIdx = Math.floor(((diffDays % 27.321661) / 27.321661 * 12 + 12) % 12);
+  // 月亮星座（简化：以2024年1月1日0:00月亮在射手座为基准推算）
+  // 注：精确月亮星座需查星历表，此处为简化参考值
+  const moonBase = new Date(2024, 0, 1, 0, 0, 0); // 2024-01-01 00:00 UTC，月亮约在射手座
+  const targetDate2 = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hour || 12, 0, 0);
+  const moonDiff = (targetDate2 - moonBase) / 86400000;
+  const moonLong2 = (260 + (moonDiff % 27.321661) / 27.321661 * 360) % 360; // 射手座起始约260°
+  const moonSignIdx = Math.floor(moonLong2 / 30) % 12;
   
-  // 上升星座（简化：按出生时间估算，每约2小时换一星座）
-  // 注：精确计算需结合出生地经纬度，此处为参考值
-  const ascBase = ((hour + 2) % 24) / 2;
-  const ascSignIdx = Math.floor((ascBase + month + day) % 12);
+  // 上升星座（简化计算，仅供参考）
+  const ascSignIdx = simplifiedAscendant(hour || 12, d.getMonth()+1, d.getDate());
   
   const signs = ['摩羯座','水瓶座','双鱼座','白羊座','金牛座','双子座','巨蟹座','狮子座','处女座','天秤座','天蝎座','射手座'];
   const signElems = ['土','风','水','火','土','风','水','火','土','风','水','火'];
