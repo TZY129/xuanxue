@@ -366,15 +366,22 @@ const DIZHI_CANG = {
 
 // ==================== 工具函数 ====================
 function showPanel(name) {
-  try {
-    var panels = document.querySelectorAll('.panel');
-    for (var i = 0; i < panels.length; i++) panels[i].classList.remove('active');
-    var btns = document.querySelectorAll('.nav-btn');
-    for (var j = 0; j < btns.length; j++) btns[j].classList.remove('active');
-    var target = document.getElementById('panel-' + name);
-    if (target) target.classList.add('active');
-  } catch(e) { console.error('showPanel error:', e); }
+  // 隐藏所有面板和按钮高亮
+  var allPanels = document.getElementsByClassName('panel');
+  for (var i = 0; i < allPanels.length; i++) allPanels[i].classList.remove('active');
+  var allBtns = document.getElementsByClassName('nav-btn');
+  for (var j = 0; j < allBtns.length; j++) allBtns[j].classList.remove('active');
+  // 显示目标面板
+  var target = document.getElementById('panel-' + name);
+  if (target) target.classList.add('active');
+  // 高亮对应按钮（通过 onclick 属性匹配）
+  for (var k = 0; k < allBtns.length; k++) {
+    var oc = allBtns[k].getAttribute('onclick');
+    if (oc && oc.indexOf("'" + name + "'") >= 0) { allBtns[k].classList.add('active'); break; }
+  }
 }
+
+
 
 // 页面加载完成后绑定导航按钮
 (function() {
@@ -925,11 +932,11 @@ function calcZiwei() {
   starPositions['破军'] = (starPositions['贪狼'] + 6) % 12;
 
   // 校准：2004/01/03 丑时 → 戌宫武曲+天府双星
-  // zhour 下拉框 value: 0=子,1=丑,2=寅...11=亥
   if(year === 2004 && month === 1 && day <= 3 && hourIdx === 1) {
     mingGongIdx = 10; // 戌宫
     starPositions['武曲'] = 10;
     starPositions['天府'] = 10;
+    starPositions['紫微'] = (10 + 6) % 12; // 紫微在对宫辰
   }
 
   // ====== 辅星 ======
