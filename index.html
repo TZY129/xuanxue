@@ -711,16 +711,17 @@ function getSunSign(month, day) {
 }
 
 function calcAstro() {
-  const date = document.getElementById('adate').value;
-  const time = document.getElementById('atime').value;
+  const dateStr = document.getElementById('adate').value;
+  const timeStr = document.getElementById('atime').value;
   const city = document.getElementById('acity').value.trim();
   
-  if(!date) { alert('请选择出生日期'); return; }
+  if(!dateStr) { alert('请选择出生日期'); return; }
   
-  const d = new Date(date);
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-  const hour = time ? parseInt(time.split(':')[0]) : 12;
+  // 直接解析日期字符串，避免 new Date() 时区偏移问题
+  const parts = dateStr.split('-');
+  const month = parseInt(parts[1], 10); // 1~12
+  const day = parseInt(parts[2], 10);
+  const hour = timeStr ? parseInt(timeStr.split(':')[0], 10) : 12;
   
   // 太阳星座
   const sunSign = getSunSign(month, day);
