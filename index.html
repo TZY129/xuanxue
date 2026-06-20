@@ -68,12 +68,12 @@ h2::before { content: "🔮"; }
 <body>
 
 <div class="nav">
-  <button class="nav-btn active" onclick="showPanel('bazi')">四柱八字</button>
-  <button class="nav-btn" onclick="showPanel('astro')">星盘解析</button>
-  <button class="nav-btn" onclick="showPanel('ziwei')">紫微斗数</button>
-  <button class="nav-btn" onclick="showPanel('tarot')">塔罗牌</button>
-  <button class="nav-btn" onclick="showPanel('qimen')">奇门遁甲</button>
-  <button class="nav-btn" onclick="showPanel('yijing')">易经占卜</button>
+  <button class="nav-btn active" data-panel="bazi">四柱八字</button>
+  <button class="nav-btn" data-panel="astro">星盘解析</button>
+  <button class="nav-btn" data-panel="ziwei">紫微斗数</button>
+  <button class="nav-btn" data-panel="tarot">塔罗牌</button>
+  <button class="nav-btn" data-panel="qimen">奇门遁甲</button>
+  <button class="nav-btn" data-panel="yijing">易经占卜</button>
 </div>
 
 <div class="container">
@@ -366,18 +366,36 @@ const DIZHI_CANG = {
 
 // ==================== 工具函数 ====================
 function showPanel(name) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  // 找到对应按钮并高亮
-  document.querySelectorAll('.nav-btn').forEach(b => {
-    try {
-      if (b.onclick && b.onclick.toString().includes("'" + name + "'")) {
-        b.classList.add('active');
-      }
-    } catch(e) {}
-  });
+  try {
+    var panels = document.querySelectorAll('.panel');
+    for (var i = 0; i < panels.length; i++) panels[i].classList.remove('active');
+    var btns = document.querySelectorAll('.nav-btn');
+    for (var j = 0; j < btns.length; j++) btns[j].classList.remove('active');
+    var target = document.getElementById('panel-' + name);
+    if (target) target.classList.add('active');
+  } catch(e) { console.error('showPanel error:', e); }
 }
+
+// 页面加载完成后绑定导航按钮
+(function() {
+  function bindNav() {
+    var btns = document.querySelectorAll('.nav-btn');
+    for (var k = 0; k < btns.length; k++) {
+      (function(btn) {
+        btn.addEventListener('click', function(e) {
+          var panel = btn.getAttribute('data-panel');
+          if (panel) showPanel(panel);
+          e.preventDefault();
+        });
+      })(btns[k]);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindNav);
+  } else {
+    bindNav();
+  }
+})();
 
 function getWuxingScore(bazi) {
   const counts = {木:0,火:0,土:0,金:0,水:0};
