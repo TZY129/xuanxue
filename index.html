@@ -719,40 +719,40 @@ function calcAstro() {
   
   // 直接解析日期字符串，避免 new Date() 时区偏移问题
   const parts = dateStr.split('-');
+  const y = parseInt(parts[0], 10);
   const month = parseInt(parts[1], 10); // 1~12
-  const day = parseInt(parts[2], 10);
+  const day   = parseInt(parts[2], 10);
   const hour = timeStr ? parseInt(timeStr.split(':')[0], 10) : 12;
+  // 用解析出的年月日构造 Date，避免时区偏移
+  const d = new Date(y, month - 1, day, hour || 12, 0, 0);
   
   // 太阳星座
   const sunSign = getSunSign(month, day);
   
-  // 月亮星座（简化：以2024年1月1日0:00月亮在射手座为基准推算）
-  // 注：精确月亮星座需查星历表，此处为简化参考值
-  const moonBase = new Date(2024, 0, 1, 0, 0, 0); // 2024-01-01 00:00 UTC，月亮约在射手座
-  const targetDate2 = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hour || 12, 0, 0);
-  const moonDiff = (targetDate2 - moonBase) / 86400000;
-  const moonLong2 = (260 + (moonDiff % 27.321661) / 27.321661 * 360) % 360; // 射手座起始约260°
-  const moonSignIdx = Math.floor(moonLong2 / 30) % 12;
+
+  // 月亮星座（简化天文算法，以2024-01-01 00:00 UTC月亮约在射手座260°为基准）
+  const moonBaseJD = dateToJulian(2024, 1, 1, 0, 0, 0);
+  const targetJD   = dateToJulian(y, month, day, hour, 0, 0);
+  const moonDays   = targetJD - moonBaseJD;
+  const moonLong   = (260 + (moonDays % 27.321661) / 27.321661 * 360) % 360;
+  const moonSignIdx = Math.floor(moonLong / 30) % 12;
+
+  // 上升星座（简化估算，精确值需出生地经纬度）
+  const ascSignIdx = Math.floor(((hour + 8) % 24) / 2 + month + day) % 12;
   
-  // 上升星座（简化计算，仅供参考）
-  const ascSignIdx = simplifiedAscendant(hour || 12, d.getMonth()+1, d.getDate());
-  
-  const signs = ['摩羯座','水瓶座','双鱼座','白羊座','金牛座','双子座','巨蟹座','狮子座','处女座','天秤座','天蝎座','射手座'];
-  const signElems = ['土','风','水','火','土','风','水','火','土','风','水','火'];
-  const signModalities = ['基本','固定','变动','基本','固定','变动','基本','固定','变动','基本','固定','变动'];
   
   let analysis = '<h3>星盘解析结果</h3>';
   analysis += '<div class="gz-display">';
-  analysis += '<div class="gz-box"><div class="label">太阳星座</div><div class="char" style="font-size:20px">' + sunSign + '</div><div class="wuxing">' + signElems[signs.indexOf(sunSign)] + '象 ' + signModalities[signs.indexOf(sunSign)] + '宫</div></div>';
-  analysis += '<div class="gz-box"><div class="label">月亮星座</div><div class="char" style="font-size:20px">' + signs[moonSignIdx] + '</div><div class="wuxing">' + signElems[moonSignIdx] + '象</div></div>';
-  analysis += '<div class="gz-box"><div class="label">上升星座</div><div class="char" style="font-size:20px">' + signs[ascSignIdx] + '</div><div class="wuxing">' + signElems[ascSignIdx] + '象</div></div>';
+  analysis += '<div class="gz-box"><div class="label">太阳星座</div><div class="char" style="font-size:20px">' + sunSign + '</div><div class="wuxing">' + STAR_ELEM[STAR_MAP.indexOf(sunSign)] + '象 ' + STAR_MODE[STAR_MAP.indexOf(sunSign)] + '宫</div></div>';
+  analysis += '<div class="gz-box"><div class="label">月亮星座</div><div class="char" style="font-size:20px">' + STAR_MAP[moonSignIdx] + '</div><div class="wuxing">' + STAR_ELEM[moonSignIdx] + '象</div></div>';
+  analysis += '<div class="gz-box"><div class="label">上升星座</div><div class="char" style="font-size:20px">' + STAR_MAP[ascSignIdx] + '</div><div class="wuxing">' + STAR_ELEM[ascSignIdx] + '象</div></div>';
   analysis += '<div class="gz-box"><div class="label">出生信息</div><div class="char" style="font-size:14px">' + month + '月' + day + '日 ' + hour + ':00</div><div class="wuxing">' + (city || '未指定') + '</div></div>';
   analysis += '</div>';
   
   // 太阳星座详细解读
   analysis += '<div class="aspect-box"><h5>太阳星座：' + sunSign + '（外在人格）</h5>';
-  analysis += '<p><strong>元素：</strong>' + signElems[signs.indexOf(sunSign)] + '象<br>';
-  analysis += '<strong>模式：</strong>' + signModalities[signs.indexOf(sunSign)] + '<br>';
+  analysis += '<p><strong>元素：</strong>' + STAR_ELEM[STAR_MAP.indexOf(sunSign)] + '象<br>';
+  analysis += '<strong>模式：</strong>' + STAR_MODE[STAR_MAP.indexOf(sunSign)] + '<br>';
   analysis += '<strong>性格特点：</strong><br>';
   const sunInterpretations = {
     '白羊座': '充满激情与行动力，天生领导者。适合创业、体育等领域。建议学会耐心。',
@@ -772,7 +772,7 @@ function calcAstro() {
   analysis += '</p></div>';
   
   // 月亮星座详细解读
-  analysis += '<div class="aspect-box"><h5>月亮星座：' + signs[moonSignIdx] + '（内在情感）</h5>';
+  analysis += '<div class="aspect-box"><h5>月亮星座：' + STAR_MAP[moonSignIdx] + '（内在情感）</h5>';
   analysis += '<p><strong>情感模式：</strong><br>';
   const moonInterpretations = {
     '白羊座': '情感直接热烈，需要自由与刺激。易不耐烦，喜怒形于色。',
@@ -788,11 +788,11 @@ function calcAstro() {
     '水瓶座': '情感独立，需要友谊和自由。情感表达理性，重视团体。',
     '双鱼座': '情感敏感，需要情感共鸣。情感表达温柔，有直觉。'
   };
-  analysis += moonInterpretations[signs[moonSignIdx]] || '情感模式待补充';
+  analysis += moonInterpretations[STAR_MAP[moonSignIdx]] || '情感模式待补充';
   analysis += '</p></div>';
   
   // 上升星座详细解读
-  analysis += '<div class="aspect-box"><h5>上升星座：' + signs[ascSignIdx] + '（人格面具）</h5>';
+  analysis += '<div class="aspect-box"><h5>上升星座：' + STAR_MAP[ascSignIdx] + '（人格面具）</h5>';
   analysis += '<p><strong>给他人印象：</strong><br>';
   const ascInterpretations = {
     '白羊座': '给人热情、直接、有活力的第一印象。可能显得自我中心。',
@@ -808,12 +808,12 @@ function calcAstro() {
     '水瓶座': '给人独特、前卫、友善的印象。可能显得疏离。',
     '双鱼座': '给人温柔、梦幻、有同情心的印象。可能显得不切实际。'
   };
-  analysis += ascInterpretations[signs[ascSignIdx]] || '人格面具待补充';
+  analysis += ascInterpretations[STAR_MAP[ascSignIdx]] || '人格面具待补充';
   analysis += '</p></div>';
   
   // 综合建议
   analysis += '<div class="aspect-box"><h5>综合建议</h5>';
-  analysis += '<p>你的太阳在' + sunSign + '，代表外在人格；月亮在' + signs[moonSignIdx] + '，代表内在情感；上升在' + signs[ascSignIdx] + '，代表人物。三者结合，发挥最大潜力。</p>';
+  analysis += '<p>你的太阳在' + sunSign + '，代表外在人格；月亮在' + STAR_MAP[moonSignIdx] + '，代表内在情感；上升在' + STAR_MAP[ascSignIdx] + '，代表人物。三者结合，发挥最大潜力。</p>';
   analysis += '<p><strong>建议：</strong>发挥太阳星座的优势，关注月亮星座的情感需求，同时注意上升星座给人的第一印象。通过了解自己的星盘，可以更好地认识自己，发挥潜力。</p>';
   analysis += '</div>';
   
