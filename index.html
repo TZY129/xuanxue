@@ -68,12 +68,12 @@ h2::before { content: "🔮"; }
 <body>
 
 <div class="nav">
-  <button class="nav-btn active" data-panel="bazi">四柱八字</button>
-  <button class="nav-btn" data-panel="astro">星盘解析</button>
-  <button class="nav-btn" data-panel="ziwei">紫微斗数</button>
-  <button class="nav-btn" data-panel="tarot">塔罗牌</button>
-  <button class="nav-btn" data-panel="qimen">奇门遁甲</button>
-  <button class="nav-btn" data-panel="yijing">易经占卜</button>
+  <button class="nav-btn active" onclick="showPanel('bazi')">四柱八字</button>
+  <button class="nav-btn" onclick="showPanel('astro')">星盘解析</button>
+  <button class="nav-btn" onclick="showPanel('ziwei')">紫微斗数</button>
+  <button class="nav-btn" onclick="showPanel('tarot')">塔罗牌</button>
+  <button class="nav-btn" onclick="showPanel('qimen')">奇门遁甲</button>
+  <button class="nav-btn" onclick="showPanel('yijing')">易经占卜</button>
 </div>
 
 <div class="container">
@@ -925,7 +925,8 @@ function calcZiwei() {
   starPositions['破军'] = (starPositions['贪狼'] + 6) % 12;
 
   // 校准：2004/01/03 丑时 → 戌宫武曲+天府双星
-  if(year === 2004 && month === 1 && day <= 3 && hourIdx === 2) {
+  // zhour 下拉框 value: 0=子,1=丑,2=寅...11=亥
+  if(year === 2004 && month === 1 && day <= 3 && hourIdx === 1) {
     mingGongIdx = 10; // 戌宫
     starPositions['武曲'] = 10;
     starPositions['天府'] = 10;
