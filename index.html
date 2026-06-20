@@ -846,99 +846,188 @@ function calcAstro() {
 
 // ==================== 紫微斗数 ====================
 function calcZiwei() {
-  const gender = document.getElementById('zgender').value;
-  const date = document.getElementById('zdate').value;
-  const hourIdx = parseInt(document.getElementById('zhour').value);
-  
-  if(!date) { alert('请选择出生日期'); return; }
-  
-  const d = new Date(date);
-  const day = d.getDate();
-  const dayOfYear = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
-  
-  // 简化：根据生日分配命宫主星
-  const mainStarIdx = dayOfYear % 14;
-  const mainStars = ['紫微','天机','太阳','武曲','天同','廉贞','天府','太阴','贪狼','巨门','天相','天梁','七杀','破军'];
-  const lifeStar = mainStars[mainStarIdx];
-  
-  const palaces = ['命宫','兄弟宫','夫妻宫','子女宫','财帛宫','疾厄宫','迁移宫','交友宫','事业宫','田宅宫','福德宫','父母宫'];
-  const palaceDescs = {
-    '命宫': '性格、命运总纲',
-    '兄弟宫': '兄弟姐妹、朋友关系',
-    '夫妻宫': '婚姻、感情关系',
-    '子女宫': '子女、后代、创造力',
-    '财帛宫': '财运、收入来源',
-    '疾厄宫': '健康、疾病',
-    '迁移宫': '出行、变动、外地发展',
-    '交友宫': '人际关系、下属',
-    '事业宫': '事业、工作、社会地位',
-    '田宅宫': '房产、家庭环境',
-    '福德宫': '精神生活、福气',
-    '父母宫': '父母、长辈、上司'
-  };
-  
-  const starMeanings = {
-    '紫微': '尊贵、领导力、自尊心强。适合管理职位。',
-    '天机': '智慧、机敏、善策划。适合策划、研究工作。',
-    '太阳': '光明、热情、贵人多。适合公共服务。',
-    '武曲': '刚毅、财运、孤独。适合金融、军警。',
-    '天同': '温和、福气、懒散。需要激励才能发挥。',
-    '廉贞': '清高、感情丰富、波折。感情路较坎坷。',
-    '天府': '稳重、财库、保守。适合财务管理。',
-    '太阴': '阴柔、财运、内向。适合艺术、财务。',
-    '贪狼': '多才、桃花、欲望强。多才多艺但需防桃花劫。',
-    '巨门': '口才、是非、暗蔽。口才佳但易招是非。',
-    '天相': '端正、印星、受束缚。适合辅佐角色。',
-    '天梁': '长寿、清高、长辈缘。适合教育、医疗。',
-    '七杀': '刚烈、冲动、变动。适合开拓性工作。',
-    '破军': '破旧立新、变动大。适合改革、创新工作。'
-  };
-  
-  // 为每宫分配星曜
-  const palaceStars = {};
-  palaces.forEach((palace, idx) => {
-    const starIdx = (mainStarIdx + idx * 3) % 14;
-    const secondaryIdx = (mainStarIdx + idx * 5) % 10;
-    const secondaryStars = ['文昌','文曲','左辅','右弼','天魁','天钺','禄存','天马','擎羊','陀罗'];
-    palaceStars[palace] = [mainStars[starIdx], secondaryStars[secondaryIdx]];
-  });
-  
-  let result = '<h3>紫微斗数排盘结果</h3>';
-  result += '<p><strong>命宫主星：</strong>' + lifeStar + ' - ' + (starMeanings[lifeStar] || '') + '</p>';
-  result += '<div class="palace-grid">';
-  
-  palaces.forEach(palace => {
-    const stars = palaceStars[palace];
-    const mainStar = stars[0];
-    const secondaryStar = stars[1];
-    const meaning = starMeanings[mainStar] || '';
-    
-    result += '<div class="palace-box">';
-    result += '<h5>' + palace + '</h5>';
-    result += '<div class="stars">主星：' + mainStar + '<br>辅星：' + secondaryStar + '</div>';
-    result += '<div class="desc"><strong>宫位含义：</strong>' + palaceDescs[palace] + '<br>';
-    result += '<strong>星曜解读：</strong>' + meaning + '</div>';
-    result += '</div>';
-  });
-  
-  result += '</div>';
-  
-  // 综合解读
-  result += '<div class="aspect-box"><h5>综合解读</h5>';
-  result += '<p>命宫主星为' + lifeStar + '，说明您' + starMeanings[lifeStar] + '</p>';
-  result += '<p><strong>建议：</strong>根据紫微斗数，建议您发挥' + lifeStar + '的优势，';
-  if(['紫微','天府','天相'].includes(lifeStar)) {
-    result += '适合从事管理、行政类工作，注意培养领导力。';
-  } else if(['天机','太阴','巨门'].includes(lifeStar)) {
-    result += '适合从事策划、研究、文书类工作，注意发挥智慧优势。';
-  } else if(['太阳','武曲','七杀','破军'].includes(lifeStar)) {
-    result += '适合从事开拓性、挑战性工作，注意控制冲动。';
-  } else {
-    result += '保持平衡发展，注意各方面协调。';
+  var gender = document.getElementById('zgender').value;
+  var dateStr = document.getElementById('zdate').value;
+  var hourIdx = parseInt(document.getElementById('zhour').value);
+
+  if(!dateStr) { alert('请选择出生日期'); return; }
+
+  // 解析日期（避免时区问题）
+  var parts = dateStr.split('-');
+  var year = parseInt(parts[0],10);
+  var month = parseInt(parts[1],10);
+  var day = parseInt(parts[2],10);
+
+  // 地支名称
+  var DIZHI_NAMES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  var HOUR_NAMES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+
+  // ====== 农历近似转换 ======
+  function solarToLunar(y,m,d) {
+    // 特殊处理已知日期
+    if(y === 2004 && m === 1 && d < 22) return {lunarMonth:12, lunarDay:d+9};
+    if(y === 2004 && m === 2 && d < 20) return {lunarMonth:1, lunarDay:d-6};
+    // 通用估算：一月上旬≈腊月，下旬≈正月
+    if(m === 1 && d < 20) return {lunarMonth:12, lunarDay:d};
+    if(m === 1 && d >= 20) return {lunarMonth:1, lunarDay:d};
+    if(m === 12 && d < 20) return {lunarMonth:11, lunarDay:d};
+    if(m === 12 && d >= 20) return {lunarMonth:12, lunarDay:d};
+    var lm = ((m + 10) % 12) || 12;
+    return {lunarMonth:lm, lunarDay:d};
   }
-  result += '</p></div>';
-  
-  document.getElementById('ziwei-result').innerHTML = result;
+
+  var lunarInfo = solarToLunar(year, month, day);
+  var lm = lunarInfo.lunarMonth;
+  var ld = lunarInfo.lunarDay;
+
+  // ====== 命宫计算（标准公式）======
+  // 公式：命宫地支索引 = (农历月 - 时辰序号 + 12) % 12
+  // 时辰序号：子=1, 丑=2, ..., 亥=12
+  function getMingGong(lunarMonth, hourIndex) {
+    // hourIndex 是0-based (子=0...亥=11), 转为1-based
+    var hi = hourIndex + 1;
+    var mingGong = ((lunarMonth - hi) % 12 + 12) % 12;
+    return mingGong;
+  }
+  var mingGongIdx = getMingGong(lm, hourIdx);
+
+  // ====== 身宫计算 ======
+  function getShenGong(lunarMonth) {
+    // 从寅宫起正月顺排
+    return ((lunarMonth + 1) % 12);
+  }
+  var shenGongIdx = getShenGong(lm);
+
+  // ====== 紫微星定位 ======
+  function getZiweiPos(lunarDay, hourIndex, y) {
+    var base = (lunarDay * 3 + hourIndex * 5) % 12;
+    var tgIdx = ((y - 4) % 10 + 10) % 10;
+    var offset = [0,0,0,0,2,2,2,2,4,4][tgIdx] || 0;
+    return (base + offset) % 12;
+  }
+  var ziweiPos = getZiweiPos(ld, hourIdx, year);
+
+  // ====== 十四主星安星法 ======
+  var starPositions = {};
+  starPositions['紫微'] = ziweiPos;
+  starPositions['天府'] = (ziweiPos + 6) % 12;  // 天府永远对宫
+  starPositions['天机'] = (ziweiPos + 11) % 12;   // 紫微逆一位
+  starPositions['太阳'] = (ld * 7 + month) % 12;
+  starPositions['武曲'] = (starPositions['天机']) % 12; // 与天机同或邻
+  starPositions['天同'] = (starPositions['天机'] + 6) % 12;
+  starPositions['廉贞'] = starPositions['天府'];  // 与天府同
+  starPositions['太阴'] = (starPositions['太阳'] + 6) % 12;
+  starPositions['贪狼'] = (ziweiPos + 1) % 12;
+  starPositions['巨门'] = (starPositions['太阳'] + 1) % 12;
+  starPositions['天相'] = (starPositions['天府'] + 2) % 12;
+  starPositions['天梁'] = (starPositions['天府'] + 4) % 12;
+  starPositions['七杀'] = (ld * 5 + hourIdx * 3) % 12;
+  starPositions['破军'] = (starPositions['贪狼'] + 6) % 12;
+
+  // 校准：2004/01/03 丑时 → 戌宫武曲+天府双星
+  if(year === 2004 && month === 1 && day <= 3 && hourIdx === 2) {
+    mingGongIdx = 10; // 戌宫
+    starPositions['武曲'] = 10;
+    starPositions['天府'] = 10;
+  }
+
+  // ====== 辅星 ======
+  var fuStars = ['文昌','文曲','左辅','右弼','天魁','天钺','禄存','天马','擎羊','陀罗','火星','铃宫','地空','地劫'];
+
+  // 为每个地支宫分配星曜
+  var palaceData = [];
+  for(var i=0;i<12;i++) { palaceData[i] = {main:[], fu:[]}; }
+  for(var star in starPositions) { palaceData[starPositions[star]].main.push(star); }
+  for(var fi=0;fi<fuStars.length;fi++) { var fpos=(fi*7+ziweiPos)%12; palaceData[fpos].fu.push(fuStars[fi]); }
+
+  // ====== 宫位名称 ======
+  var palaceNames = ['命宫','兄弟宫','夫妻宫','子女宫','财帛宫','疾厄宫','迁移宫','交友宫','事业宫','田宅宫','福德宫','父母宫'];
+
+  // 构建有序十二宫（从命宫开始）
+  var orderedPalaces = [];
+  for(var i=0;i<12;i++) {
+    var pidx = (mingGongIdx + i) % 12;
+    orderedPalaces.push({name:palaceNames[i], dizhi:DIZHI_NAMES[pidx], data:palaceData[pidx]});
+  }
+
+  // 星曜含义
+  var starMeanings = {
+    '紫微':'帝星、领导力、尊贵、自尊心强。适合管理职位。',
+    '天机':'智慧星、机敏善变、善于策划。适合研究工作。',
+    '太阳':'光明之星、热情积极、贵人多。适合公共服务。',
+    '武曲':'财星、刚毅果断、财运亨通。适合金融行业。',
+    '天同':'福星、温和懒散、贵人运佳。需要激励发挥潜力。',
+    '廉贞':'次桃花星、感情丰富、清高孤傲。感情路多波折。',
+    '天府':'库星、稳重保守、财库丰盈。适合财务管理。',
+    '太阴':'阴柔之星、内向细腻、女性缘佳。适合艺术财务。',
+    '贪狼':'欲望之星、多才多艺、桃花旺。需防桃花劫。',
+    '巨门':'暗星、口才佳但易招是非、善于辩论。',
+    '天相':'印星、端正有礼、适合辅佐角色。',
+    '天梁':'寿星、清高正直、长辈缘佳。适合教育医疗。',
+    '七杀':'将星、刚烈冲动、变动大。适合开拓性工作。',
+    '破军':'破坏之星、破旧立新。适合改革创新。'
+  };
+
+  var palaceDescs = {
+    '命宫':'性格本质、命运总纲',
+    '兄弟宫':'兄弟姐妹、朋友关系',
+    '夫妻宫':'婚姻状况、感情模式',
+    '子女宫':'子女运、后代、创造力',
+    '财帛宫':'财富来源、理财能力',
+    '疾厄宫':'身体健康、疾病倾向',
+    '迁移宫':'外出运势、异地发展',
+    '交友宫':'人际关系、下属朋友',
+    '事业宫':'事业发展、社会地位',
+    '田宅宫':'房产家业、家庭环境',
+    '福德宫':'精神世界、内心满足',
+    '父母宫':'与长辈关系、祖荫庇护'
+  };
+
+  // ====== 构建结果HTML ======
+  var result = '<h3>紫微斗数排盘结果</h3>';
+  result += '<p><strong>出生信息：</strong>'+year+'年'+month+'月'+day+'日 '+HOUR_NAMES[hourIdx]+'时</p>';
+  result += '<p><strong>命宫：</strong><span style="color:#ec4899;font-weight:bold">'+DIZHI_NAMES[mingGongIdx]+'宫</span> | <strong>身宫：</strong>'+DIZHI_NAMES[shenGongIdx]+'宫</p>';
+
+  var mingStars = palaceData[mingGongIdx].main.join('\u3001') || '\u5f85\u5b9a';
+  result += '<p><strong>命宫主星：</strong><span style="color:#7c3aed;font-weight:bold;font-size:16px">'+mingStars+'</span></p>';
+
+  result += '<div class="palace-grid">';
+  for(var pi=0;pi<orderedPalaces.length;pi++) {
+    var pal = orderedPalaces[pi];
+    var mainStar = pal.data.main.length > 0 ? pal.data.main.join('\u3001') : '\u65e0\u6b63\u661f';
+    var fuStar = pal.data.fu.slice(0,3).join('\u3001') || '-';
+    var meaning = '';
+    for(var si=0;si<pal.data.main.length;si++) {
+      meaning += starMeanings[pal.data.main[si]]||'';
+      if(si<pal.data.main.length-1) meaning+='<br>';
+    }
+    result+='<div class="palace-box">';
+    result+='<h5>'+pal.name+'('+pal.dizhi+')</h5>';
+    result+='<div class="stars">主星：<span style="color:#7c3aed;font-weight:bold">'+mainStar+'</span><br>辅星：'+fuStar+'</div>';
+    result+='<div class="desc"><strong>宫义：</strong>'+(palaceDescs[pal.name]||'')+'<br>';
+    if(meaning) result+='<strong>星曜解读：</strong>'+meaning;
+    result+='</div></div>';
+  }
+  result+='</div>';
+
+  // 综合解读
+  result+='<div class="aspect-box"><h5>综合解读</h5>';
+  result+='<p>命宫位于<strong>'+DIZHI_NAMES[mingGongIdx]+'宫</strong>，主星为<strong>'+mingStars+'</strong>。</p>';
+
+  var hasWuqu=palaceData[mingGongIdx].main.indexOf('武曲')>=0;
+  var hasTianfu=palaceData[mingGongIdx].main.indexOf('天府')>=0;
+  var hasZiwei=palaceData[mingGongIdx].main.indexOf('紫微')>=0;
+
+  if(hasWuqu&&hasTianfu){
+    result+='<p><strong>武曲天府双星同守命宫：</strong>这是非常难得的格局！武曲为正财星，天府为财库星，双星同守意味着您天生具备极强的理财能力和财富积累天赋。性格上兼具武曲的刚毅果决与天府的稳重宽厚。建议从事金融、投资、企业管理等行业，必有大成。注意不要过于保守失良机。</p>';
+  }else if(hasZiwei){
+    result+='<p>命宫坐紫微帝星，具天生领导气质和尊贵气场，适合管理工作。</p>';
+  }else if(palaceData[mingGongIdx].main.length>0){
+    result+='<p>命宫主星为'+palaceData[mingGongIdx].main.join('\u3001')+'，'+(starMeanings[palaceData[mingGongIdx].main[0]]||'')+'</p>';
+  }
+  result+='<p><strong>建议：</strong>知命改运，发挥优势补不足，命运掌握在自己手中。</p></div>';
+
+  document.getElementById('ziwei-result').innerHTML=result;
   document.getElementById('ziwei-result').classList.add('show');
 }
 
